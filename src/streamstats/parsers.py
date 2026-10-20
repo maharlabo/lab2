@@ -41,6 +41,10 @@ def json_parse(file_path: str) -> LoggingEntry:
                     log = LoggingEntry(timestamp=f_str_json["timestamp"], level=f_str_json["level"], source=f_str_json["source"], message=f_str_json["message"])
                 except:
                     raise StreamStatsError("Wrong event")
+                timestamp = int(log.timestamp.timestamp())
+                if timestamp < latest_timestamp:
+                    raise StreamStatsError("Wrong timestamp")
+                latest_timestamp = timestamp
                 yield log
                 f_str = opened_file.read(1)
             elif f_str == "":
@@ -54,6 +58,7 @@ def csv_parse(file_path: str) -> LoggingEntry:
             raise StreamStatsError("Wrong event")
 
         f_str = "_"
+        latest_timestamp = 0
         while f_str != "":
             while (f_str == " " or f_str == "\n") and f_str != "":
                 f_str = opened_file.read(1)
@@ -96,4 +101,8 @@ def csv_parse(file_path: str) -> LoggingEntry:
                     elements[3] += f_str
                     f_str = opened_file.read(1)
             log = LoggingEntry(timestamp=elements[0], level=elements[1], source=elements[2], message=elements[3])
+            timestamp = int(log.timestamp.timestamp())
+            if timestamp < latest_timestamp:
+                raise StreamStatsError("Wrong timestamp")
+            latest_timestamp = timestamp
             yield log
