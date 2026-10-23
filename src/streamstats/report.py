@@ -10,13 +10,14 @@ def make_report(file_path: str, format: str, output: str = "report.json", *, ski
         raise StreamStatsError("Wrong Format")
     if format != file_path[-len(format):]:
         raise StreamStatsError("Wrong Format")
-    analysed_file = analyse_file(file_path, format)
     if os.path.isfile(output):
         with open(output, "r") as f:
             json_report = json.loads(f.read())
     else:
         json_report = {
+            "files": 0,
             "event_count": 0,
+            "skipped_lines": 0,
             "levels": {
                 "DEBUG": 0,
                 "INFO": 0,
@@ -24,9 +25,12 @@ def make_report(file_path: str, format: str, output: str = "report.json", *, ski
                 "ERROR": 0,
                 "CRITICAL": 0
             },
-            "source_event_counts": {}
+            "source_event_counts": {},
         }
+    json_report["files"] += 1
+    analysed_file = analyse_file(file_path, format, json_report["files"], skip_invalid)
     json_report["event_count"] += analysed_file["event_count"]
+    json_report["skipped_lines"] += analysed_file["skipped_lines"]
     for l in json_report["levels"]:
         json_report["levels"][l] += analysed_file["levels"][l]
     for source in analysed_file["source_event_counts"]:

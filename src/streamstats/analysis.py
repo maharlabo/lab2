@@ -4,7 +4,7 @@ from streamstats.parsers import csv_parse
 from datetime import datetime
 
 
-def analyse_file(file_path: str, format:str, skip_invalid: bool = False) -> dict:
+def analyse_file(file_path: str, format:str, files: int, skip_invalid: bool = False) -> dict:
     if format != "jsonl" and format != "csv":
         raise StreamStatsError("Unsupported format. Use CSV or JSONL")
     result = {
@@ -17,9 +17,10 @@ def analyse_file(file_path: str, format:str, skip_invalid: bool = False) -> dict
             "CRITICAL": 0,
         },
         "source_event_counts": {},
+        "skipped_lines": 0,
     }
     if format == "jsonl":
-        for log in jsonl_parse(file_path, skip_invalid):
+        for log, sl in jsonl_parse(file_path, files, skip_invalid):
             result["event_count"] += 1
             result["levels"][log.level] += 1
 
@@ -48,8 +49,9 @@ def analyse_file(file_path: str, format:str, skip_invalid: bool = False) -> dict
                     result["last_timestamp"] = log.timestamp.isoformat()
             else:
                 result["last_timestamp"] = log.timestamp.isoformat()
+            result["skipped_lines"] = sl
     elif format == "csv":
-        for log in csv_parse(file_path, skip_invalid):
+        for log, sl in csv_parse(file_path, files, skip_invalid):
             result["event_count"] += 1
             result["levels"][log.level] += 1
             if log.source in result["source_event_counts"]:
@@ -75,4 +77,5 @@ def analyse_file(file_path: str, format:str, skip_invalid: bool = False) -> dict
                     result["last_timestamp"] = log.timestamp.isoformat()
             else:
                 result["last_timestamp"] = log.timestamp.isoformat()
+            result["skipped_lines"] = sl
     return result
