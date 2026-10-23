@@ -1,6 +1,6 @@
 import json
-from models import LoggingEntry
-from errors import StreamStatsError
+from streamstats.models import LoggingEntry
+from streamstats.errors import StreamStatsError
 
 
 def csv_parse(file_path: str, skip_invalid: bool = False) -> LoggingEntry:

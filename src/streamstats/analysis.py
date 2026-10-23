@@ -1,11 +1,11 @@
-from errors import StreamStatsError
-from parsers import jsonl_parse
-from parsers import csv_parse
+from streamstats.errors import StreamStatsError
+from streamstats.parsers import jsonl_parse
+from streamstats.parsers import csv_parse
 from datetime import datetime
 
 
-def analyse_file(file_path: str, skip_invalid: bool = False) -> dict:
-    if file_path[-5:].lower() != "jsonl" and file_path[-3:].lower() != "csv":
+def analyse_file(file_path: str, format:str, skip_invalid: bool = False) -> dict:
+    if format != "jsonl" and format != "csv":
         raise StreamStatsError("Unsupported format. Use CSV or JSONL")
     result = {
         "event_count": 0,
@@ -18,7 +18,7 @@ def analyse_file(file_path: str, skip_invalid: bool = False) -> dict:
         },
         "source_event_counts": {},
     }
-    if file_path[-5:].lower() == "jsonl":
+    if format == "jsonl":
         for log in jsonl_parse(file_path, skip_invalid):
             result["event_count"] += 1
             result["levels"][log.level] += 1
@@ -48,7 +48,7 @@ def analyse_file(file_path: str, skip_invalid: bool = False) -> dict:
                     result["last_timestamp"] = log.timestamp.isoformat()
             else:
                 result["last_timestamp"] = log.timestamp.isoformat()
-    elif file_path[-3:] == "csv":
+    elif format == "csv":
         for log in csv_parse(file_path, skip_invalid):
             result["event_count"] += 1
             result["levels"][log.level] += 1
