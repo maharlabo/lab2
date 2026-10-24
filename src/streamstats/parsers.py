@@ -6,12 +6,12 @@ import sys
 
 
 def csv_parse(file_path: str, files: int, skip_invalid: bool = False) -> LoggingEntry:
-    with open(file_path) as opened_file:
+    with open(file_path, encoding='utf-8') as opened_file:
         colums = opened_file.readline().split(",")
         line_count = 2
         skipped_lines = 0
         if not (colums[0] == "timestamp" and colums[1] == "level" and colums[2] == "source" and colums[3].strip() == "message"):
-            raise StreamStatsError("Wrong event")
+            raise StreamStatsError("Wrong file")
 
         f_str = "_"
         latest_timestamp = 0
@@ -37,7 +37,7 @@ def csv_parse(file_path: str, files: int, skip_invalid: bool = False) -> Logging
                             f_str = " "
                         if f_str == "":
                             if not skip_invalid:
-                                logging.error(f"Wrong event. File: {files}, string: {line_count}")
+                                logging.warning(f"Wrong event. File: {files}, string: {line_count}")
                                 sys.exit(2)
                             else:
                                 logging.warning("Wrong event")
@@ -49,30 +49,30 @@ def csv_parse(file_path: str, files: int, skip_invalid: bool = False) -> Logging
                         f_str = opened_file.read(1)
                         if f_str == "\n":
                             if not skip_invalid:
-                                logging.error(f"Wrong event. File: {files}, string: {line_count}")
+                                logging.warning(f"Wrong event. File: {files}, string: {line_count}")
                                 sys.exit(2)
                             else:
                                 logging.warning("Wrong event")
                                 skipped_lines += 1
                                 skipped = True
-                                skipped_lines += 1
                                 break
                         if f_str == "":
                             if not skip_invalid:
-                                logging.error(f"Wrong event. File: {files}, string: {line_count}")
+                                logging.warning(f"Wrong event. File: {files}, string: {line_count}")
                                 sys.exit(2)
                             else:
                                 logging.warning("Wrong event")
                                 skipped_lines += 1
                 if f_str == "":
                     if not skip_invalid:
-                        logging.error(f"Wrong event. File: {files}, string: {line_count}")
+                        logging.warning(f"Wrong event. File: {files}, string: {line_count}")
                         sys.exit(2)
                     else:
                         logging.warning("Wrong event")
                         skipped_lines += 1
             if skipped:
                 continue
+            f_str = opened_file.read(1)
             if f_str == '"':
                 f_str = opened_file.read(1)
                 while f_str != '"':
@@ -82,14 +82,13 @@ def csv_parse(file_path: str, files: int, skip_invalid: bool = False) -> Logging
                         f_str = " "
                     if f_str == "":
                         if not skip_invalid:
-                            logging.error(f"Wrong event. File: {files}, string: {line_count}")
+                            logging.warning(f"Wrong event. File: {files}, string: {line_count}")
                             sys.exit(2)
                         else:
                             logging.warning("Wrong event")
                             skipped_lines += 1
                 f_str = opened_file.read(1)
             else:
-                f_str = opened_file.read(1)
                 while f_str != '\n' and f_str != "":
                     elements[3] += f_str
                     f_str = opened_file.read(1)
@@ -97,7 +96,7 @@ def csv_parse(file_path: str, files: int, skip_invalid: bool = False) -> Logging
                 log = LoggingEntry(timestamp=elements[0], level=elements[1], source=elements[2], message=elements[3])
             except:
                 if not skip_invalid:
-                    logging.error(f"Wrong event. File: {files}, string: {line_count}")
+                    logging.warning(f"Wrong event. File: {files}, string: {line_count}")
                     sys.exit(2)
                 else:
                     logging.warning("Wrong event")
@@ -105,7 +104,7 @@ def csv_parse(file_path: str, files: int, skip_invalid: bool = False) -> Logging
             timestamp = int(log.timestamp.timestamp())
             if timestamp < latest_timestamp:
                 if not skip_invalid:
-                    logging.error(f"Wrong timestamp. File: {files}, string: {line_count}")
+                    logging.warning(f"Wrong timestamp. File: {files}, string: {line_count}")
                     sys.exit(2)
                 else:
                     logging.warning("Wrong timestamp")
@@ -116,7 +115,7 @@ def csv_parse(file_path: str, files: int, skip_invalid: bool = False) -> Logging
 
 
 def jsonl_parse(file_path: str, files: int, skip_invalid: bool = False) -> LoggingEntry:
-    with open(file_path) as opened_file:
+    with open(file_path, encoding="utf-8") as opened_file:
         f_str = opened_file.readline()
         skipped_lines = 0
         line_count = 1
@@ -130,7 +129,7 @@ def jsonl_parse(file_path: str, files: int, skip_invalid: bool = False) -> Loggi
                 f_str_json = json.loads(f_str)
             except:
                 if not skip_invalid:
-                    logging.error(f"Wrong event. File: {files}, string: {line_count}")
+                    logging.warning(f"Wrong event. File: {files}, string: {line_count}")
                     sys.exit(2)
                 else:
                     logging.warning("Wrong event")
@@ -141,7 +140,7 @@ def jsonl_parse(file_path: str, files: int, skip_invalid: bool = False) -> Loggi
                 log = LoggingEntry(timestamp=f_str_json["timestamp"], level=f_str_json["level"], source=f_str_json["source"], message=f_str_json["message"])
             except:
                 if not skip_invalid:
-                    logging.error(f"Wrong event. File: {files}, string: {line_count}")
+                    logging.warning(f"Wrong event. File: {files}, string: {line_count}")
                     sys.exit(2)
                 else:
                     logging.warning("Wrong event")
@@ -151,7 +150,7 @@ def jsonl_parse(file_path: str, files: int, skip_invalid: bool = False) -> Loggi
             timestamp = int(log.timestamp.timestamp())
             if timestamp < latest_timestamp:
                 if not skip_invalid:
-                    logging.error(f"Wrong timestamp. File: {files}, string: {line_count}")
+                    logging.warning(f"Wrong timestamp. File: {files}, string: {line_count}")
                     sys.exit(2)
                 else:
                     logging.warning("Wrong timestamp")

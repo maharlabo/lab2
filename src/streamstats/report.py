@@ -1,3 +1,5 @@
+import sys
+
 from streamstats.analysis import analyse_file
 import json
 from datetime import datetime
@@ -11,7 +13,7 @@ def make_report(file_path: str, format: str, output: str = "report.json", *, ski
     if format != file_path[-len(format):]:
         raise StreamStatsError("Wrong Format")
     if os.path.isfile(output):
-        with open(output, "r") as f:
+        with open(output, "r", encoding="utf-8") as f:
             json_report = json.loads(f.read())
     else:
         json_report = {
@@ -29,6 +31,8 @@ def make_report(file_path: str, format: str, output: str = "report.json", *, ski
         }
     json_report["files"] += 1
     analysed_file = analyse_file(file_path, format, json_report["files"], skip_invalid)
+    if "first_timestamp" not in analysed_file:
+        raise StreamStatsError("Wrong file")
     json_report["event_count"] += analysed_file["event_count"]
     json_report["skipped_lines"] += analysed_file["skipped_lines"]
     for l in json_report["levels"]:
@@ -52,5 +56,5 @@ def make_report(file_path: str, format: str, output: str = "report.json", *, ski
     top_errors = sorted([source for source in json_report["source_event_counts"]], key=lambda x: json_report["source_event_counts"][x]["ERROR"]+json_report["source_event_counts"][x]["CRITICAL"])
     json_report["top_errors"] = top_errors[:5]
 
-    with open(output, "w") as f:
+    with open(output, "w", encoding="utf-8") as f:
         f.write(json.dumps(json_report))
